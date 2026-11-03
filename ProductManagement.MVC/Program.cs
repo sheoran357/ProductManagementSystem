@@ -1,7 +1,16 @@
+using ProductManagement.MVC.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Register MVC controllers and Razor views.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddHttpClient<IProductApiService, ProductApiService>(client =>
+{
+    var apiUrl = builder.Configuration["ApiSettings:BaseUrl"]
+        ?? throw new InvalidOperationException("API base URL is missing.");
+
+    client.BaseAddress = new Uri(apiUrl);
+});
 
 var app = builder.Build();
 
