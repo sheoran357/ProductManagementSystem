@@ -1,7 +1,16 @@
+using ProductManagement.MVC.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Register MVC controllers and Razor views.
 builder.Services.AddControllersWithViews();
+
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"]
+    ?? "http://localhost:5000/";
+
+builder.Services.AddHttpClient<IProductApiService, ProductApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+});
 
 var app = builder.Build();
 
@@ -11,7 +20,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
