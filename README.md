@@ -1,15 +1,15 @@
 # Product Management System
 
-A small product management application built with ASP.NET Core 10.
+A product management application built with ASP.NET Core 10. It has a REST API for managing products and categories, along with an MVC application that uses the API.
 
-The solution has two separate applications:
+The solution contains two projects:
 
-- **ProductManagement.API** – REST API, business rules and database access.
-- **ProductManagement.MVC** – Razor UI that calls the API using HttpClient. It does not connect to the database.
+- **ProductManagement.API** – Handles API requests, application logic and database operations.
+- **ProductManagement.MVC** – Provides the Razor-based interface and communicates with the API through HttpClient.
 
-## Technology
+## Technologies used
 
-- C# / ASP.NET Core 10
+- C# and ASP.NET Core 10
 - Entity Framework Core 10
 - SQLite
 - ASP.NET Core MVC and Razor Views
@@ -18,66 +18,49 @@ The solution has two separate applications:
 
 ## Requirements
 
-Install the .NET 10 SDK. You can check it with:
+Install the .NET 10 SDK. To check that it is installed, run:
 
 ```powershell
 dotnet --version
 ```
 
-## 1. Create the database
-
-Open a terminal in the folder containing `ProductManagement.sln`.
-
-Install the EF Core command-line tool if it is not already installed:
+You will also need the EF Core command-line tool. If it is not installed, run:
 
 ```powershell
 dotnet tool install --global dotnet-ef --version 10.0.0
 ```
 
-If the tool is already installed, update it instead:
+## Set up the database
+
+Open a terminal in the folder that contains `ProductManagement.sln`.
+
+The initial EF Core migration is already included in the repository. Apply it to create the SQLite database and add the sample categories:
 
 ```powershell
-dotnet tool update --global dotnet-ef --version 10.0.0
-```
-
-Create and apply the first migration:
-
-```powershell
-dotnet ef migrations add InitialCreate --project ProductManagement.API --startup-project ProductManagement.API
 dotnet ef database update --project ProductManagement.API --startup-project ProductManagement.API
 ```
 
-The migration creates the Categories and Products tables, their relationship, and the four sample categories configured in the DbContext.
+This creates the Categories and Products tables, sets up their relationship, and inserts the four sample categories.
 
-## 2. Run the API
+## Run the application
 
-Open a terminal in the solution folder:
+Start the API first:
 
 ```powershell
 dotnet run --project ProductManagement.API --launch-profile http
 ```
 
-The API listens at `http://localhost:5000`.
-
-Open Swagger at:
+The API runs at `http://localhost:5000`. You can open Swagger at:
 
 `http://localhost:5000/swagger`
 
-Keep this terminal running.
-
-## 3. Run the MVC application
-
-Open a second terminal in the solution folder:
+Leave the API running, then open a second terminal and start the MVC application:
 
 ```powershell
 dotnet run --project ProductManagement.MVC --launch-profile http
 ```
 
-Open the website at:
-
-`http://localhost:5001`
-
-The MVC application calls the API at `http://localhost:5000`. Start the API before using the MVC website.
+The MVC website runs at `http://localhost:5001` and sends its requests to the API at `http://localhost:5000`.
 
 ## API endpoints
 
@@ -86,7 +69,7 @@ The MVC application calls the API at `http://localhost:5000`. Start the API befo
 | GET | `/api/categories` | Get all categories |
 | GET | `/api/products` | Get all products with category names |
 | GET | `/api/products?categoryId=1` | Filter products by category |
-| GET | `/api/products/{id}` | Get one product |
+| GET | `/api/products/{id}` | Get a product by ID |
 | POST | `/api/products` | Create a product |
 | PUT | `/api/products/{id}` | Update a product |
 | DELETE | `/api/products/{id}` | Delete a product |
@@ -110,20 +93,20 @@ ProductManagementSystem/
 └── ProductManagement.sln
 ```
 
-## Architecture
+## How it is organised
 
-The API follows a simple Controller → Service → Data flow:
+The API is split into three main parts:
 
-1. Controllers handle HTTP requests and return status codes.
-2. Services contain application rules and coordinate database work.
-3. Entity Framework Core uses the DbContext to read and save data.
+1. **Controllers** receive requests and return the appropriate HTTP responses.
+2. **Services** handle the application logic.
+3. **Data** contains the Entity Framework Core DbContext and database configuration.
 
-The MVC application uses a typed HttpClient service to communicate with the API. It never uses the API's DbContext or SQLite database directly.
+The MVC project does not access the database directly. It uses a typed HttpClient service to send requests to the API.
 
-## Notes
+## A few implementation details
 
-- Category deletion is configured with `DeleteBehavior.Restrict`, so a category with products cannot be deleted.
+- A category cannot be deleted while it still has products linked to it.
 - Product creation and updates check that the selected category exists.
-- Product creation time is assigned by the API in UTC.
-- Request DTOs are validated with data annotations.
-- Unexpected API errors are handled by global exception middleware.
+- Product creation time is stored in UTC.
+- Request data is validated using data annotations.
+- Unexpected API errors are handled by middleware.
